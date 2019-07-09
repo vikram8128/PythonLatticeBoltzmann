@@ -1,3 +1,6 @@
+# Copyright (C) Vikram Singh 2019
+# Email: vikramsingh8128@gmail.com
+
 from numpy import *
 import matplotlib.pyplot as plt
 from matplotlib import cm

@@ -1,3 +1,6 @@
+# Copyright (C) Vikram Singh 2019
+# Email: vikramsingh8128@gmail.com
+
 from numpy import *
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -37,24 +40,18 @@ col1 = array([0,1,2])
 col2 = array([3,4,5])
 col3 = array([6,7,8])
 
-def macroDenseC(fin) :
-    rho = sum(fin,axis=2)
-    u[:,:,0] = ndimage.convolve(fin,[[v[:,0]]],mode='constant',cval=0.0,origin=[0,0,-4])[:,:,0]
-    u[:,:,1] = ndimage.convolve(fin,[[v[:,1]]],mode='constant',cval=0.0,origin=[0,0,-4])[:,:,0]
-    return rho,u
-
 def macroDense(fin) :
     rho = sum(fin,axis=2)
     u = zeros((nx,ny,2))
-    for i in range(9) :
-        u[:,:,0] += v[i,0] * fin[:,:,i]
-        u[:,:,1] += v[i,1] * fin[:,:,i]
+    u[:,:,0] = -1* ndimage.convolve(fin,[[v[:,0]]],mode='constant',cval=0.0,origin=[0,0,4])[:,:,0]
+    u[:,:,1] = -1* ndimage.convolve(fin,[[v[:,1]]],mode='constant',cval=0.0,origin=[0,0,4])[:,:,0]
     u[:,:,0] /= rho
     u[:,:,1] /= rho
     return rho,u
 
+
 def equilibrium(rho,u) :
-    usqr = 3/2 * (u[:,:,0]**2 + u[:,:,1]**2)
+    usqr = (3/2 * (u[:,:,0]**2 + u[:,:,1]**2))
     eq = zeros((nx,ny,9))
     for i in range(9) :
         cu = 3*(v[i,0]*u[:,:,0] + v[i,1]*u[:,:,1])
@@ -70,20 +67,18 @@ def iniVel(x,y,d) :
     return (1-d)*uLB*(1 + 1e-4*sin(y/ly*2*pi))
 
 vel = fromfunction(iniVel,(nx,ny,2))
-
 fin = equilibrium(1,vel)
 
 for time in range(iterations) :
     fin[-1,:,col3] = fin[-2,:,col3]
     
-    rho,u = macroDenseC(fin)
+    rho,u = macroDense(fin)
 
     u[0,:,:] = vel[0,:,:]
-    rho[0,:] = ((sum(fin[0,:,col2],axis=0)) + 2*(sum(fin[0,:,col3],axis=0)))
+    rho[0,:] = ((sum(fin[0,:,col2],axis=0)) + 2*(sum(fin[0,:,col3],axis=0))) / (1-u[0,:,0])
 
     eq = equilibrium(rho,u)
     fin[0,:,[0,1,2]] = eq[0,:,[0,1,2]] + fin[0,:,[8,7,6]] - eq[0,:,[8,7,6]]
-
     fout = fin-relax*(fin-eq)
 
     for i in range(9) :
@@ -94,5 +89,5 @@ for time in range(iterations) :
     
     if (time%100 == 0) :
         plt.clf()
-        plt.imshow(sqrt(u[:,:,0]**2+u[:,:,1]**2).transpose(),cmap=cm.Blues)
+        plt.imshow(sqrt(u[:,:,0]**2+u[:,:,1]**2).transpose(),cmap=cm.Reds)
         plt.savefig("vel.{0:04d}.png".format(time//100))

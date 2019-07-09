@@ -1,3 +1,7 @@
+# Copyright (C) Vikram Singh 2019
+# Email: vikramsingh8128@gmail.com
+
+
 from numpy import *
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -11,7 +15,7 @@ ny = 180
 nz = 180
 ly = ny-1 # domain height
 lz = nz-1 # domain depth
-cx, cy, cz, r = 3*nx//4, ny//2, nz//2, ny//9 # location of obstacle
+cx, cy, cz, r = nx//4, ny//2, nz//2, ny//9 # location of obstacle
 uLB = 0.04 # inflow velocity
 nulb = (uLB*r/Re) # viscosity
 relax = 1/(3*nulb+0.5) # relaxation parameter
@@ -70,7 +74,7 @@ obstacle = fromfunction(inObstacle,(nx,ny,nz))
 
 
 def iniVel(d,x,y,z) :
-    return (d==0)*(-uLB)*(1 + 1e-4*sin(y/ly*2*pi) - 1e-4*sin(z/lz*2*pi))
+    return (d==0)*(uLB)*(1 + 1e-4*sin(y/ly*2*pi) - 1e-4*sin(z/lz*2*pi))
 
 vel = fromfunction(iniVel,(3,nx,ny,nz))
 
@@ -78,17 +82,17 @@ vel = fromfunction(iniVel,(3,nx,ny,nz))
 fin = equilibrium(1,vel)
 
 for time in range(iterations) :
-    fin[faceIn,0,:,:] = fin[faceIn,1,:,:] # outflow
+    fin[faceOut,-1,:,:] = fin[faceOut,-2,:,:] # outflow
 
     rho,u = macroDense(fin)
 
     #inflow
-    u[:,-1,:,:] = vel[:,-1,:,:]
-    rho[-1,:,:] = ((sum(fin[faceMid,-1,:,:],axis=0)) + 2*(sum(fin[faceIn,-1,:,:],axis=0))) / (1-u[0,-1,:,:])
+    u[:,0,:,:] = vel[:,0,:,:]
+    rho[0,:,:] = ((sum(fin[faceMid,0,:,:],axis=0)) + 2*(sum(fin[faceOut,0,:,:],axis=0))) / (1-u[0,0,:,:])
 
     #equlibrium
     eq = equilibrium(rho,u)
-    fin[faceOut,-1,:,:] = eq[faceOut,-1,:,:] + fin[faceIn[::-1],-1,:,:] - eq[faceIn[::-1],-1,:,:]
+    fin[faceIn,0,:,:] = eq[faceIn,0,:,:] + fin[faceOut[::-1],0,:,:] - eq[faceOut[::-1],0,:,:]
 
     #collision
     fout = fin-relax*(fin-eq) 
