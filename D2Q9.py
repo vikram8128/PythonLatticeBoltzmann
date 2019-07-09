@@ -14,12 +14,23 @@ cx, cy, r = nx//4, ny//2, ny//9 # location of obstacle
 uLB = 0.04 # inflow velocity
 nulb = (uLB*r/Re) # viscosity
 relax = 1/(3*nulb+0.5) # relaxation parameter
-le = zeros((nx,ny))
-le[0,:] = 1
+
 
 
 #Lattice constants
-v = array([[1,1],[1,0],[1,-1],[0,1],[0,0],[0,-1],[-1,1],[-1,0],[-1,-1]])
+qDim = 1 # number of rings in lattice direction grid
+
+def genV() : # Generator for lattice directions
+    v = []
+    for x in range(qDim,-qDim-1,-1) :
+        for y in range(qDim,-qDim-1,-1) :
+            v.append([x,y])
+    return v
+
+v = array(genV())
+
+#TODO generalise weights
+
 t = array([1/36,1/9,1/36,1/9,4/9,1/9,1/36,1/9,1/36])
 
 col1 = array([0,1,2])
@@ -52,7 +63,7 @@ obstacle = fromfunction(inObstacle,(nx,ny))
 #Initial velocity (slight disturbance to give instability)
 
 def iniVel(d,x,y) :
-    return (1-d)*uLB*(1 + le-4*sin(y/ly*2*pi))
+    return (1-d)*uLB*(1 + 1e-4*sin(y/ly*2*pi))
 
 vel = fromfunction(iniVel,(2,nx,ny))
 
@@ -60,9 +71,8 @@ fin = equilibrium(1,vel)
 
 for time in range(iterations) :
     fin[col3,-1,:] = fin[col3,-2,:] # outflow
-
+    
     rho,u = macroDense(fin)
-
     #inflow
     u[:,0,:] = vel[:,0,:]
     rho[0,:] = ((sum(fin[col2,0,:],axis=0)) + 2*(sum(fin[col3,0,:],axis=0))) / (1-u[0,0,:])
@@ -84,5 +94,5 @@ for time in range(iterations) :
 
     if(time%100==0) :
         plt.clf()
-        plt.imshow(sqrt(u[0]**2+u[1]**2).transpose(),cmap=cm.Reds)
-        plt.savefig("vel.{}.png".format(time//100))
+        plt.imshow(sqrt(u[0]**2+u[1]**2).transpose(),cmap=cm.Blues)
+        plt.savefig("vel.{0:04d}.png".format(time//100))
