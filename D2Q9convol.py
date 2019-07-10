@@ -79,6 +79,7 @@ for time in range(iterations) :
 
     eq = equilibrium(rho,u)
     fin[0,:,[0,1,2]] = eq[0,:,[0,1,2]] + fin[0,:,[8,7,6]] - eq[0,:,[8,7,6]]
+
     fout = fin-relax*(fin-eq)
 
     for i in range(9) :
