@@ -9,7 +9,7 @@ from scipy import ndimage
 
 #Flow parameters
 iterations = 200000
-Re = 10.0 #Reynolds number
+Re = 2000.0 #Reynolds number
 nx = 420
 ny = 180
 ly = ny-1 # domain height

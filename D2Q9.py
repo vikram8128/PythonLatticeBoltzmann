@@ -18,7 +18,7 @@ uLB = 0.04 # inflow velocity
 nulb = (uLB*r/Re) # viscosity
 relax = 1/(3*nulb+0.5) # relaxation parameter
 
-
+print(relax)
 
 #Lattice constants
 qDim = 1 # number of rings in lattice direction grid
