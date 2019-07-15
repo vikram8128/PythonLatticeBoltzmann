@@ -2,16 +2,12 @@
 # Email: vikramsingh8128@gmail.com
 
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from matplotlib import cm
 import os
 
-from PIL import Image
-
 cur_dir = os.getcwd()
-tf.compat.v1.enable_eager_execution()
+#tf.compat.v1.enable_eager_execution()
 sess = tf.compat.v1.InteractiveSession()
 
 iterations = 200000
@@ -72,7 +68,7 @@ def inObstacle(x,y) :
 
 def getImage(u) :
     usq =  u**2
-    return (2**6)*simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])
+    return (2**3)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1]))
 
 obstacle = np.fromfunction(inObstacle,(nx,ny))
 
@@ -114,9 +110,11 @@ u = tf.Variable(tf.zeros((nx,ny,2), dtype=tf.float32))
 rho = tf.Variable(tf.zeros((nx,ny), dtype=tf.float32))
 eq = tf.Variable(tf.zeros((nx,ny,9), dtype=tf.float32))
 
-rho0 = tf.zeros((ny))
-for i in range(3) :
-    rho0 += ((fin[0,:,col2[i]]) + 2*(fin[0,:,col3[i]])) / (1-u[0,:,0])
+def rho0(fin,u) :
+    r = tf.zeros((ny))
+    for i in range(3) :
+        r += ((fin[0,:,col2[i]]) + 2*(fin[0,:,col3[i]])) / (1-u[0,:,0])
+    return r
 
 inFin0 = eq[0,:,0] + fin[0,:,8] - eq[0,:,8]
 inFin1 = eq[0,:,1] + fin[0,:,7] - eq[0,:,7]
@@ -130,41 +128,72 @@ def streamRoller(fout) :
         ret.append(tf.roll(tf.roll(fout[:,:,i], tf.dtypes.cast(v[i,0],tf.dtypes.int32), axis=0),tf.dtypes.cast(v[i,1],tf.dtypes.int32), axis=1))
     return tf.stack(ret,axis=2)
 
-#tf.compat.v1.global_variables_initializer().run()
+tf.compat.v1.global_variables_initializer().run()
 
 
-#step = tf.group(
+a = tf.group(
 
-for time in range(20000):
+#for time in range(20000):
     fin.assign(outflowFin(fin)),
 
+)
+b = tf.group(
+
     rho.assign(macroDense(fin)),
+
+)
+c = tf.group(
+
     u.assign(macroU(fin,rho)),
 
-    u[0,:,:].assign(vel[0,:,:]),
-    rho[0,:].assign(rho0),
 
+)
+d = tf.group(
+
+    u[0,:,:].assign(vel[0,:,:]),
+
+)
+e = tf.group(
+
+    rho[0,:].assign(rho0(fin,u)),
+)
+ff = tf.group(
+    
     eq.assign(equilibrium(rho,u)),
+)
+g = tf.group(
     fin[0,:,0].assign(inFin0),
     fin[0,:,1].assign(inFin1),
-    fin[0,:,2].assign(inFin2),
+    fin[0,:,2].assign(inFin2)
 
+)
+j = tf.group(
 
     fout.assign(collideOut(fin,eq)),
-
+)
+k = tf.group(
     fout.assign(obstacleRef(fin, fout, obstacle)),
-
+)
+l = tf.group(
     fin.assign(streamRoller(fout))
 
+)
 
-#)
 
-
-#for time in range(200):
-    #step.run()
+for time in range(20000):
+    a.run()
+    b.run()
+    c.run()
+    d.run()
+    e.run()
+    ff.run()
+    g.run()
+    j.run()
+    k.run()
+    l.run()
     if (time%100 == 0) :
         img = tf.image.encode_png(tf.image.convert_image_dtype(getImage(u),tf.dtypes.uint16))
         f = open("vel.{0:04d}.png".format(time//100), "wb+")
-        f.write(img.numpy())
+        f.write(img.eval())
         f.close()
         

@@ -8,7 +8,7 @@ from matplotlib import cm
 
 
 #Flow parameters
-iterations = 200000
+iterations = 20000
 Re = 10.0 #Reynolds number
 nx = 420
 ny = 180
@@ -17,8 +17,6 @@ cx, cy, r = nx//4, ny//2, ny//9 # location of obstacle
 uLB = 0.04 # inflow velocity
 nulb = (uLB*r/Re) # viscosity
 relax = 1/(3*nulb+0.5) # relaxation parameter
-
-print(relax)
 
 #Lattice constants
 qDim = 1 # number of rings in lattice direction grid
