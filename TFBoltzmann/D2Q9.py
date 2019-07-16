@@ -7,7 +7,6 @@ import sys
 import os
 
 cur_dir = os.getcwd()
-#tf.compat.v1.enable_eager_execution()
 sess = tf.compat.v1.InteractiveSession()
 
 iterations = 200000
@@ -97,6 +96,21 @@ def obstacleRef(fin, fout, obstacle) :
     a = fout*(1-tf.stack([obstacle,obstacle,obstacle,obstacle,obstacle,obstacle,obstacle,obstacle,obstacle],axis=2))
     return a + obstacleConv(tf.math.multiply(fin,tf.stack([obstacle,obstacle,obstacle,obstacle,obstacle,obstacle,obstacle,obstacle,obstacle],axis=2)))
 
+def rho0(fin,u) :
+    r = tf.zeros((ny))
+    for i in range(3) :
+        r += ((fin[0,:,col2[i]]) + 2*(fin[0,:,col3[i]])) / (1-u[0,:,0])
+    return r
+
+def collideOut(fin,eq) :
+    return fin-relax*(fin-eq)
+
+def streamRoller(fout) :
+    ret = []
+    for i in range(9) :
+        ret.append(tf.roll(tf.roll(fout[:,:,i], tf.dtypes.cast(v[i,0],tf.dtypes.int32), axis=0),tf.dtypes.cast(v[i,1],tf.dtypes.int32), axis=1))
+    return tf.stack(ret,axis=2)
+
 vel = tf.cast(tf.convert_to_tensor(np.fromfunction(iniVel,(nx,ny,2))),tf.float32)
 
 fininit = tf.zeros((nx,ny,9), dtype=tf.float32)
@@ -110,87 +124,119 @@ u = tf.Variable(tf.zeros((nx,ny,2), dtype=tf.float32))
 rho = tf.Variable(tf.zeros((nx,ny), dtype=tf.float32))
 eq = tf.Variable(tf.zeros((nx,ny,9), dtype=tf.float32))
 
-def rho0(fin,u) :
-    r = tf.zeros((ny))
-    for i in range(3) :
-        r += ((fin[0,:,col2[i]]) + 2*(fin[0,:,col3[i]])) / (1-u[0,:,0])
-    return r
 
-inFin0 = eq[0,:,0] + fin[0,:,8] - eq[0,:,8]
-inFin1 = eq[0,:,1] + fin[0,:,7] - eq[0,:,7]
-inFin2 = eq[0,:,2] + fin[0,:,6] - eq[0,:,6]
-def collideOut(fin,eq) :
-    return fin-relax*(fin-eq)
+def inFin0(fin,eq) :
+    return eq[0,:,0] + fin[0,:,8] - eq[0,:,8]
+def inFin1(fin,eq) :
+    return eq[0,:,1] + fin[0,:,7] - eq[0,:,7]
+def inFin2(fin,eq) :
+    return eq[0,:,2] + fin[0,:,6] - eq[0,:,6]
 
-def streamRoller(fout) :
-    ret = []
-    for i in range(9) :
-        ret.append(tf.roll(tf.roll(fout[:,:,i], tf.dtypes.cast(v[i,0],tf.dtypes.int32), axis=0),tf.dtypes.cast(v[i,1],tf.dtypes.int32), axis=1))
-    return tf.stack(ret,axis=2)
+outFin = outflowFin(fin)
+rhoNew = macroDense(fin)
+uNew = macroU(fin,rho)
+rho0New = rho0(fin,u)
+eqNew = equilibrium(rho,u)
+collOut = collideOut(fin,eq)
+obstOut = obstacleRef(fin,fout,obstacle)
+strOut = streamRoller(fout)
 
-tf.compat.v1.global_variables_initializer().run()
+
+
+step01 = tf.compat.v1.assign(fin,outflowFin(fin))
+
+with tf.compat.v1.get_default_graph().control_dependencies([step01]):
+    step02 = tf.compat.v1.assign(rho,macroDense(fin))
+
+    with tf.compat.v1.get_default_graph().control_dependencies([step02]):
+        step03 = tf.compat.v1.assign(u,macroU(fin,rho))
+
+        with tf.compat.v1.get_default_graph().control_dependencies([step03]):
+            step04 = tf.compat.v1.assign(u[0,:,:],vel[0,:,:])
+
+            with tf.compat.v1.get_default_graph().control_dependencies([step04]):
+                step05 = tf.compat.v1.assign(rho[0,:],rho0(fin,u))
+                        
+                with tf.compat.v1.get_default_graph().control_dependencies([step05]):
+                    step06 = tf.compat.v1.assign(eq,equilibrium(rho,u))
+
+                    with tf.compat.v1.get_default_graph().control_dependencies([step06]):
+                        step07 = tf.compat.v1.assign(fin[0,:,0],inFin0(fin,eq))
+                        step08 = tf.compat.v1.assign(fin[0,:,1],inFin1(fin,eq))
+                        step09 = tf.compat.v1.assign(fin[0,:,2],inFin2(fin,eq))
+
+                        with tf.compat.v1.get_default_graph().control_dependencies([step07,step08,step09]):
+                            step10 = tf.compat.v1.assign(fout,collideOut(fin,eq))
+
+                            with tf.compat.v1.get_default_graph().control_dependencies([step10]):
+                                step11 = tf.compat.v1.assign(fout,obstacleRef(fin,fout,obstacle))
+
+                                with tf.compat.v1.get_default_graph().control_dependencies([step11]):
+                                    step12 = tf.compat.v1.assign(fin,streamRoller(fout))
+
+                                    with tf.compat.v1.get_default_graph().control_dependencies([step12]):
+                                        step13 = tf.compat.v1.assign(fin,fin)
+
+combo = tf.group(step13,)
 
 
 a = tf.group(
-
-#for time in range(20000):
-    fin.assign(outflowFin(fin)),
-
+    tf.compat.v1.assign(fin,outFin),
 )
+
 b = tf.group(
-
-    rho.assign(macroDense(fin)),
-
+    tf.compat.v1.assign(rho,rhoNew),
 )
+
 c = tf.group(
-
-    u.assign(macroU(fin,rho)),
-
-
+    tf.compat.v1.assign(u,uNew),
 )
+
 d = tf.group(
-
-    u[0,:,:].assign(vel[0,:,:]),
-
+    tf.compat.v1.assign(u[0,:,:],vel[0,:,:]),
 )
+
 e = tf.group(
-
-    rho[0,:].assign(rho0(fin,u)),
+    tf.compat.v1.assign(rho[0,:],rho0New),
 )
+
 ff = tf.group(
-    
-    eq.assign(equilibrium(rho,u)),
+    tf.compat.v1.assign(eq,eqNew),
 )
+
 g = tf.group(
-    fin[0,:,0].assign(inFin0),
-    fin[0,:,1].assign(inFin1),
-    fin[0,:,2].assign(inFin2)
-
+    tf.compat.v1.assign(fin[0,:,0],inFin0(fin,eq)),
+    tf.compat.v1.assign(fin[0,:,1],inFin1(fin,eq)),
+    tf.compat.v1.assign(fin[0,:,2],inFin2(fin,eq))
 )
+
 j = tf.group(
+    tf.compat.v1.assign(fout,collOut),
 
-    fout.assign(collideOut(fin,eq)),
 )
+
 k = tf.group(
-    fout.assign(obstacleRef(fin, fout, obstacle)),
+    tf.compat.v1.assign(fout,obstOut),
 )
+
 l = tf.group(
-    fin.assign(streamRoller(fout))
-
+    tf.compat.v1.assign(fin,strOut),
 )
 
+tf.compat.v1.global_variables_initializer().run()
 
 for time in range(20000):
-    a.run()
-    b.run()
-    c.run()
-    d.run()
-    e.run()
-    ff.run()
-    g.run()
-    j.run()
-    k.run()
-    l.run()
+    # a.run()
+    # b.run()
+    # c.run()
+    # d.run()
+    # e.run()
+    # ff.run()
+    # g.run()
+    # j.run()
+    # k.run()
+    # l.run()
+    sess.run(combo)
     if (time%100 == 0) :
         img = tf.image.encode_png(tf.image.convert_image_dtype(getImage(u),tf.dtypes.uint16))
         f = open("vel.{0:04d}.png".format(time//100), "wb+")
