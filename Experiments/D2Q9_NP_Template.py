@@ -97,8 +97,8 @@ for time in range(timeSteps*stepsPerFrame) :
     ### Uncomment whichever outflow statement required
     # fin[col0,0,:] = fin[col0,1,:] # left edge outflow
     fin[col2,-1,:] = fin[col2,-2,:] # right edge outflow
-    # fin[row0,0,:] = fin[row0,1,:] # top edge outflow
-    # fin[row2,-1,:] = fin[row2,-2,:] # bottom edge outflow
+    # fin[row0,:,0] = fin[row0,:,1] # top edge outflow
+    # fin[row2,:,-1] = fin[row2,:,-2] # bottom edge outflow
     
 
     rho,u = macroDense(fin)
@@ -109,13 +109,13 @@ for time in range(timeSteps*stepsPerFrame) :
     rho[0,:] = ((sum(fin[col1,0,:],axis=0)) + 2*(sum(fin[col2,0,:],axis=0))) / (1-u[0,0,:])
 
     # u[:,-1,:] = vel[:,-1,:] # for right edge inflow
-    # rho[-1,:] = ((sum(fin[col1,-1,:],axis=0)) + 2*(sum(fin[col0,-1,:],axis=0))) / (1-u[0,-1,:])
+    # rho[-1,:] = ((sum(fin[col1,-1,:],axis=0)) + 2*(sum(fin[col0,-1,:],axis=0))) / (1+u[0,-1,:])
 
     # u[:,:,0] = vel[:,:,0] # for top edge inflow
-    # rho[:,0] = ((sum(fin[row1,:,0],axis=0)) + 2*(sum(fin[row2,:,0],axis=0))) / (1-u[1,:,0])
+    # rho[:,0] = ((sum(fin[row1,:,0],axis=0)) + 2*(sum(fin[row2,:,0],axis=0))) / (1+u[1,:,0])
 
     # u[:,:,-1] = vel[:,:,-1] # for bottom edge inflow
-    # rho[:,-1] = ((sum(fin[row1,:,-1],axis=0)) + 2*(sum(fin[row0,:,-1],axis=0))) / (1-u[1,0,:])
+    # rho[:,-1] = ((sum(fin[row1,:,-1],axis=0)) + 2*(sum(fin[row0,:,-1],axis=0))) / (1-u[1,:,-1])
 
 
 
@@ -140,4 +140,4 @@ for time in range(timeSteps*stepsPerFrame) :
     if(time%100==0) :
         plt.clf()
         plt.imshow(sqrt(u[0]**2+u[1]**2).transpose(),cmap=cm.Blues)
-        plt.savefig("vel.{0:04d}.png".format(time//stepsPerFrame))
+        plt.savefig("output/vel.{0:04d}.png".format(time//stepsPerFrame))

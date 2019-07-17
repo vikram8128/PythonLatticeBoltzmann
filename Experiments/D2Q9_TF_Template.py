@@ -32,18 +32,17 @@ uLB = 0.04 ### Speed of fluid flow in lattice units
 relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.dtypes.float32)/Re)+0.5)
 
 
-# def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
-#     return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
+def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
+    return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
 
-### Replace inObstacle(x,y) with the following to get obstacle from bmp image (black is obstacle, white is fluid)
+### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-img_path = 'ObstacleProfiles/aerofoil.png'
-img = cv2.imread(img_path, 0)
-ny,nx = img.shape
+# img_path = 'ObstacleProfiles/aerofoil.png'
+# img = cv2.imread(img_path, 0)
+# ny,nx = img.shape
 
-def inObstacle(x,y) :
-    print(x.shape,y.shape)
-    return tf.dtypes.cast(img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128, tf.dtypes.float32)
+# def inObstacle(x,y) :
+#     return tf.dtypes.cast(img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128, tf.dtypes.float32)
 
 
 def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y), with direction d (d=0 is x-component, d=1 is y-component) (Example for flow around a cylinder)
@@ -141,7 +140,7 @@ def inFin2(fin,eq) :
 # def rho0(fin,u) : # Inflow density function for top edge inflow
 #     r = tf.zeros((nx))
 #     for i in range(3) :
-#         r += ((fin[:,0,row1[i]]) + 2*(fin[:,0,row2[i]])) / (1-u[:,0,1])
+#         r += ((fin[:,0,row1[i]]) + 2*(fin[:,0,row2[i]])) / (1+u[:,0,1])
 #     return r
     
 # def inFin2(fin,eq) : # Inflow population functions for top edge inflow
@@ -156,7 +155,7 @@ def inFin2(fin,eq) :
 # def rho0(fin,u) : # Inflow density function for bottom edge inflow
 #     r = tf.zeros((nx))
 #     for i in range(3) :
-#         r += ((fin[:,-1,row1[i]]) + 2*(fin[:,-1,row0[i]])) / (1+u[:,-1,1])
+#         r += ((fin[:,-1,row1[i]]) + 2*(fin[:,-1,row0[i]])) / (1-u[:,-1,1])
 #     return r
     
 # def inFin0(fin,eq) : # Inflow population functions for top edge inflow
