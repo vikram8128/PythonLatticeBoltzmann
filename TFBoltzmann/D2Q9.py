@@ -239,7 +239,7 @@ for time in range(20000):
     sess.run(combo)
     if (time%100 == 0) :
         img = tf.image.encode_png(tf.image.convert_image_dtype(getImage(u),tf.dtypes.uint16))
-        f = open("vel.{0:04d}.png".format(time//100), "wb+")
+        f = open("output/vel.{0:04d}.png".format(time//100), "wb+")
         f.write(img.eval())
         f.close()
         
