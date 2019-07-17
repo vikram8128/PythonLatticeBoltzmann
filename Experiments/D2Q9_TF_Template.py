@@ -7,6 +7,7 @@ import tensorflow as tf
 import numpy as np
 import sys
 import os
+import cv2
 
 cur_dir = os.getcwd()
 sess = tf.compat.v1.InteractiveSession()
@@ -18,7 +19,6 @@ Re = 10.0 ### Reynolds number (adjust for viscosity)
 nx = 420 ### Lattice Dimensions
 ny = 180
 
-
 ### Constants for obstacle (Example for flow around a cylinder)
 cx = nx//4
 cy = ny//2
@@ -29,11 +29,22 @@ l = r ### Characteristic length
 uLB = 0.04 ### Speed of fluid flow in lattice units
 
 
-relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.float32)/Re)+0.5)
+relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.dtypes.float32)/Re)+0.5)
 
 
-def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
-    return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
+# def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
+#     return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
+
+### Replace inObstacle(x,y) with the following to get obstacle from bmp image (black is obstacle, white is fluid)
+
+img_path = 'ObstacleProfiles/aerofoil.png'
+img = cv2.imread(img_path, 0)
+ny,nx = img.shape
+
+def inObstacle(x,y) :
+    print(x.shape,y.shape)
+    return tf.dtypes.cast(img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128, tf.dtypes.float32)
+
 
 def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y), with direction d (d=0 is x-component, d=1 is y-component) (Example for flow around a cylinder)
     return (1-d)*(uLB)*(1 + 1e-4*np.sin(y/(ny-1)*2*np.pi))
@@ -200,8 +211,8 @@ def getImage(u) : # Translation function from velocities to tensor for imaging
     usq =  u**2
     return (2**3)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1]))
 
-obstacle = np.fromfunction(inObstacle,(nx,ny)) #generator of obstacle tensor
 
+obstacle = np.fromfunction(inObstacle,(nx,ny)) #generator for obstacle tensor
 
 
 def obstacleConv(f) : # Helper function for creating obstacle mask
