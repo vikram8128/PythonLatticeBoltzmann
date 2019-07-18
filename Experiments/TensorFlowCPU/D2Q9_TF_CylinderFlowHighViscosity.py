@@ -14,7 +14,7 @@ sess = tf.compat.v1.InteractiveSession()
 
 timeSteps = 200
 stepsPerFrame = 100
-Re = 10.0 ### Reynolds number (adjust for viscosity)
+Re = 200.0 ### Reynolds number (adjust for viscosity)
 
 nx = 420 ### Lattice Dimensions
 ny = 180
@@ -37,7 +37,7 @@ def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-# img_path = '../ObstacleProfiles/airfoil.png'
+# img_path = 'ObstacleProfiles/airfoil.png'
 # img = cv2.imread(img_path, 0)
 # ny,nx = img.shape
 

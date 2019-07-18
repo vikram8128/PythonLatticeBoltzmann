@@ -20,11 +20,8 @@ nx = 420 ### Lattice Dimensions
 ny = 180
 
 ### Constants for obstacle (Example for flow around a cylinder)
-cx = nx//4
-cy = ny//2
-r = ny//9
 
-l = r ### Characteristic length
+l = nx//2 ### Characteristic length
 
 uLB = 0.04 ### Speed of fluid flow in lattice units
 
@@ -32,17 +29,17 @@ uLB = 0.04 ### Speed of fluid flow in lattice units
 relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.dtypes.float32)/Re)+0.5)
 
 
-def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
-    return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
+# def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
+#     return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-# img_path = '../ObstacleProfiles/airfoil.png'
-# img = cv2.imread(img_path, 0)
-# ny,nx = img.shape
+img_path = '../ObstacleProfiles/airfoil.png'
+img = cv2.imread(img_path, 0)
+ny,nx = img.shape
 
-# def inObstacle(x,y) :
-#     return tf.dtypes.cast(img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128, tf.dtypes.float32)
+def inObstacle(x,y) :
+    return tf.dtypes.cast(img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128, tf.dtypes.float32)
 
 
 def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y), with direction d (d=0 is x-component, d=1 is y-component) (Example for flow around a cylinder)

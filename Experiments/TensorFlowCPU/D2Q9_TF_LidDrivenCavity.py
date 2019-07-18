@@ -16,15 +16,12 @@ timeSteps = 200
 stepsPerFrame = 100
 Re = 10.0 ### Reynolds number (adjust for viscosity)
 
-nx = 420 ### Lattice Dimensions
+nx = 180 ### Lattice Dimensions
 ny = 180
 
 ### Constants for obstacle (Example for flow around a cylinder)
-cx = nx//4
-cy = ny//2
-r = ny//9
 
-l = r ### Characteristic length
+l = ny//2 ### Characteristic length
 
 uLB = 0.04 ### Speed of fluid flow in lattice units
 
@@ -33,7 +30,7 @@ relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.dtypes.float32)/Re)+0.5)
 
 
 def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
-    return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
+    return tf.dtypes.cast([[(((x[a,b]==0) or (x[a,b]==nx-1)) or (y[a,b]==ny-1)) for b in range(ny)] for a in range(nx)],tf.dtypes.float32)
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
@@ -46,7 +43,7 @@ def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around
 
 
 def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y), with direction d (d=0 is x-component, d=1 is y-component) (Example for flow around a cylinder)
-    return (1-d)*(uLB)*(1 + 1e-4*np.sin(y/(ny-1)*2*np.pi))
+    return (1-d)*(0.5)*(y==0)
 
 
 ### Uncomment whichever outflowFin function required
@@ -62,17 +59,17 @@ def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y),
 #     fin = tf.stack(finL,axis=0)
 #     return fin
 
-def outflowFin(fin) : # Outflow function for right edge outflow
-    finL = tf.unstack(fin,axis=0)
-    finLb1 = tf.unstack(finL[-1],axis=1)
-    finLb2 = tf.unstack(finL[-2],axis=1)
-    finLb1[6] = finLb2[6]
-    finLb1[7] = finLb2[7]
-    finLb1[8] = finLb2[8]
-    finL[-1] = tf.stack(finLb1,axis=1)
-    finL[-2] = tf.stack(finLb2,axis=1)
-    fin = tf.stack(finL,axis=0)
-    return fin
+# def outflowFin(fin) : # Outflow function for right edge outflow
+#     finL = tf.unstack(fin,axis=0)
+#     finLb1 = tf.unstack(finL[-1],axis=1)
+#     finLb2 = tf.unstack(finL[-2],axis=1)
+#     finLb1[6] = finLb2[6]
+#     finLb1[7] = finLb2[7]
+#     finLb1[8] = finLb2[8]
+#     finL[-1] = tf.stack(finLb1,axis=1)
+#     finL[-2] = tf.stack(finLb2,axis=1)
+#     fin = tf.stack(finL,axis=0)
+#     return fin
 
 # def outflowFin(fin) : # Outflow function for top edge outflow
 #     finL = tf.unstack(fin,axis=1)
@@ -107,18 +104,18 @@ row1 = tf.convert_to_tensor([1,4,7])
 row0 = tf.convert_to_tensor([2,5,8])
 
 ### Uncomment whichever set of inflow functions (rho0, inFin) required
-def rho0(fin,u) : # Inflow density function for left edge inflow
-    r = tf.zeros((ny))
-    for i in range(3) :
-        r += ((fin[0,:,col1[i]]) + 2*(fin[0,:,col2[i]])) / (1-u[0,:,0])
-    return r
+# def rho0(fin,u) : # Inflow density function for left edge inflow
+#     r = tf.zeros((ny))
+#     for i in range(3) :
+#         r += ((fin[0,:,col1[i]]) + 2*(fin[0,:,col2[i]])) / (1-u[0,:,0])
+#     return r
 
-def inFin0(fin,eq) : # Inflow population functions for left edge inflow
-    return eq[0,:,0] + fin[0,:,8] - eq[0,:,8]
-def inFin1(fin,eq) :
-    return eq[0,:,1] + fin[0,:,7] - eq[0,:,7]
-def inFin2(fin,eq) :
-    return eq[0,:,2] + fin[0,:,6] - eq[0,:,6]
+# def inFin0(fin,eq) : # Inflow population functions for left edge inflow
+#     return eq[0,:,0] + fin[0,:,8] - eq[0,:,8]
+# def inFin1(fin,eq) :
+#     return eq[0,:,1] + fin[0,:,7] - eq[0,:,7]
+# def inFin2(fin,eq) :
+#     return eq[0,:,2] + fin[0,:,6] - eq[0,:,6]
 
 
 
@@ -249,63 +246,29 @@ eq = tf.Variable(tf.zeros((nx,ny,9), dtype=tf.float32)) # Macroscopic equilibriu
 
 
 
-step01 = tf.compat.v1.assign(fin,outflowFin(fin)) # Population outflow
+#step01 = tf.compat.v1.assign(fin,outflowFin(fin)) # Population outflow
+step02 = tf.compat.v1.assign(rho,macroDense(fin)) # Macroscopic density calculation
 
-with tf.compat.v1.get_default_graph().control_dependencies([step01]):
-    step02 = tf.compat.v1.assign(rho,macroDense(fin)) # Macroscopic density calculation
+with tf.compat.v1.get_default_graph().control_dependencies([step02]):
+    step03 = tf.compat.v1.assign(u,macroU(fin,rho)) # Macroscopic velocity calculation
+        
+    with tf.compat.v1.get_default_graph().control_dependencies([step03]): # Inflow velocity
+        step04 = tf.compat.v1.assign(u[:,0,:],vel[:,0,:]) # For left edge inflow
+        
+        with tf.compat.v1.get_default_graph().control_dependencies([step04]):
+            step06 = tf.compat.v1.assign(eq,equilibrium(rho,u)) # Macroscopic equilibrium population calculation
 
-    with tf.compat.v1.get_default_graph().control_dependencies([step02]):
-        step03 = tf.compat.v1.assign(u,macroU(fin,rho)) # Macroscopic velocity calculation
+            with tf.compat.v1.get_default_graph().control_dependencies([step06]):
+                step10 = tf.compat.v1.assign(fout,collideOut(fin,eq)) # Collision calculation
 
-        with tf.compat.v1.get_default_graph().control_dependencies([step03]): # Inflow velocity
-            ### Uncomment whichever inflow velocity statement required
-            step04 = tf.compat.v1.assign(u[0,:,:],vel[0,:,:]) # For left edge inflow
-            # step04 = tf.compat.v1.assign(u[-1,:,:],vel[-1,:,:]) # For right edge inflow
-            # step04 = tf.compat.v1.assign(u[:,0,:],vel[:,0,:]) # For top edge inflow
-            # step04 = tf.compat.v1.assign(u[:,-1,:],vel[:,-1,:]) # For bottom edge inflow
+                with tf.compat.v1.get_default_graph().control_dependencies([step10]):
+                    step11 = tf.compat.v1.assign(fout,obstacleRef(fin,fout,obstacle)) # Obstacle collision calculation
 
-            with tf.compat.v1.get_default_graph().control_dependencies([step04]): #Inflow Density
-                ### Uncomment whichever inflow density statement required
-                step05 = tf.compat.v1.assign(rho[0,:],rho0(fin,u)) # For left edge inflow
-                # step05 = tf.compat.v1.assign(rho[-1,:],rho0(fin,u)) # For right edge inflow
-                # step05 = tf.compat.v1.assign(rho[:,0],rho0(fin,u)) # For top edge inflow
-                # step05 = tf.compat.v1.assign(rho[:,-1],rho0(fin,u)) # For bottom edge inflow
-                        
-                with tf.compat.v1.get_default_graph().control_dependencies([step05]):
-                    step06 = tf.compat.v1.assign(eq,equilibrium(rho,u)) # Macroscopic equilibrium population calculation
+                    with tf.compat.v1.get_default_graph().control_dependencies([step11]):
+                        step12 = tf.compat.v1.assign(fin,streamRoller(fout)) # Streaming calculation
 
-                    with tf.compat.v1.get_default_graph().control_dependencies([step06]): # Inflow population calculation
-                        ### Uncomment whichever inflow population set of statements required
-                        step07 = tf.compat.v1.assign(fin[0,:,0],inFin0(fin,eq)) #For left edge inflow
-                        step08 = tf.compat.v1.assign(fin[0,:,1],inFin1(fin,eq))
-                        step09 = tf.compat.v1.assign(fin[0,:,2],inFin2(fin,eq))
-
-                        
-                        # step07 = tf.compat.v1.assign(fin[-1,:,6],inFin6(fin,eq)) # For right edge inflow
-                        # step08 = tf.compat.v1.assign(fin[-1,:,7],inFin7(fin,eq))
-                        # step09 = tf.compat.v1.assign(fin[-1,:,8],inFin8(fin,eq))
-
-                        
-                        # step07 = tf.compat.v1.assign(fin[:,0,2],inFin2(fin,eq)) # For top edge inflow
-                        # step08 = tf.compat.v1.assign(fin[:,0,5],inFin5(fin,eq))
-                        # step09 = tf.compat.v1.assign(fin[:,0,8],inFin8(fin,eq))
-
-                        
-                        # step07 = tf.compat.v1.assign(fin[:,-1,0],inFin0(fin,eq)) # For bottom edge inflow
-                        # step08 = tf.compat.v1.assign(fin[:,-1,3],inFin3(fin,eq))
-                        # step09 = tf.compat.v1.assign(fin[:,-1,6],inFin6(fin,eq))
-
-                        with tf.compat.v1.get_default_graph().control_dependencies([step07,step08,step09]):
-                            step10 = tf.compat.v1.assign(fout,collideOut(fin,eq)) # Collision calculation
-
-                            with tf.compat.v1.get_default_graph().control_dependencies([step10]):
-                                step11 = tf.compat.v1.assign(fout,obstacleRef(fin,fout,obstacle)) # Obstacle collision calculation
-
-                                with tf.compat.v1.get_default_graph().control_dependencies([step11]):
-                                    step12 = tf.compat.v1.assign(fin,streamRoller(fout)) # Streaming calculation
-
-                                    with tf.compat.v1.get_default_graph().control_dependencies([step12]):
-                                        step13 = tf.compat.v1.assign(fin,fin) # Garbage line to force execution of streaming step
+                        with tf.compat.v1.get_default_graph().control_dependencies([step12]):
+                            step13 = tf.compat.v1.assign(fin,fin) # Garbage line to force execution of streaming step
 
 stepGroup = tf.group(step13,)
 

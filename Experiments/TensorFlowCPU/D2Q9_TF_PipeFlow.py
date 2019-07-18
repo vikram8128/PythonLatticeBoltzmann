@@ -20,11 +20,9 @@ nx = 420 ### Lattice Dimensions
 ny = 180
 
 ### Constants for obstacle (Example for flow around a cylinder)
-cx = nx//4
-cy = ny//2
-r = ny//9
+uy,dy = ny//4, 3*ny//4 
 
-l = r ### Characteristic length
+l = dy-uy ### Characteristic length
 
 uLB = 0.04 ### Speed of fluid flow in lattice units
 
@@ -33,11 +31,11 @@ relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.dtypes.float32)/Re)+0.5)
 
 
 def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
-    return tf.dtypes.cast((x-cx)**2 + (y-cy)**2 < r**2,tf.dtypes.float32)
+    return tf.dtypes.cast([[((y[a,b] < uy) and (y[a,b] < x[a,b])) or ((y[a,b] >= dy) and (ny-y[a,b] < x[a,b])) for b in range(ny)] for a in range(nx)],tf.dtypes.float32)
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-# img_path = '../ObstacleProfiles/airfoil.png'
+# img_path = 'ObstacleProfiles/airfoil.png'
 # img = cv2.imread(img_path, 0)
 # ny,nx = img.shape
 
@@ -208,7 +206,7 @@ def equilibrium(rho,u) : # Macroscopic equilibrium populations
 
 def getImage(u) : # Translation function from velocities to tensor for imaging
     usq =  u**2
-    return tf.transpose((2**3)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])),perm=[1,0,2])
+    return tf.transpose((2**2)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])),perm=[1,0,2])
 
 
 obstacle = np.fromfunction(inObstacle,(nx,ny)) #generator for obstacle tensor
