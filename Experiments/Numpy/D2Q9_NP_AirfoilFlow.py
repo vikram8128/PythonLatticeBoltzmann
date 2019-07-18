@@ -16,26 +16,26 @@ Re = 10.0 ### Reynolds number (adjust for viscosity)
 nx = 420 ### Lattice Dimensions
 ny = 180
 
-cx, cy, r = nx//4, ny//2, ny//9 ### Constants for obstacle (Example for flow around a cylinder)
+### Constants for obstacle (Example for flow around a cylinder)
 
 uLB = 0.04 ### Speed of fluid flow in lattice units
 
-l = r ### Characteristic length
+l = nx//2 ### Characteristic length
 nulb = (uLB*l/Re) # viscosity
 relax = 1/(3*nulb+0.5) # relaxation parameter
 
 
-def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
-    return (x-cx)**2 + (y-cy)**2 < r**2
+# def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around a cylinder)
+#     return (x-cx)**2 + (y-cy)**2 < r**2
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-# img_path = '../ObstacleProfiles/airfoil.png'
-# img = cv2.imread(img_path, 0)
-# ny,nx = img.shape
+img_path = '../ObstacleProfiles/airfoil.png'
+img = cv2.imread(img_path, 0)
+ny,nx = img.shape
 
-# def inObstacle(x,y) :
-#     return img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128
+def inObstacle(x,y) :
+    return img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128
 
 
 def iniVel(d,x,y) : ### Function describing inflow velocities at position (x,y), with direction d (d=0 is x-component, d=1 is y-component) (Example for flow around a cylinder)

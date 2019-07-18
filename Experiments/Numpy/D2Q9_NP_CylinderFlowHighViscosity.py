@@ -30,7 +30,7 @@ def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-# img_path = '../ObstacleProfiles/airfoil.png'
+# img_path = 'ObstacleProfiles/airfoil.png'
 # img = cv2.imread(img_path, 0)
 # ny,nx = img.shape
 
