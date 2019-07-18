@@ -37,7 +37,7 @@ def inObstacle(x,y) : ### Boolean function for obstacle (Example for flow around
 
 ### Replace inObstacle(x,y) with the following to get obstacle from png image (black is obstacle, white is fluid)
 
-# img_path = 'ObstacleProfiles/aerofoil.png'
+# img_path = 'ObstacleProfiles/airfoil.png'
 # img = cv2.imread(img_path, 0)
 # ny,nx = img.shape
 
@@ -232,6 +232,7 @@ def streamRoller(fout) : # Streaming operator
     for i in range(9) :
         ret.append(tf.roll(tf.roll(fout[:,:,i], tf.dtypes.cast(v[i,0],tf.dtypes.int32), axis=0),tf.dtypes.cast(v[i,1],tf.dtypes.int32), axis=1))
     return tf.stack(ret,axis=2)
+
 
 vel = tf.cast(tf.convert_to_tensor(np.fromfunction(iniVel,(nx,ny,2))),tf.float32) # creates initial velocity conditions
 
