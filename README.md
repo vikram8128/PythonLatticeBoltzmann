@@ -59,4 +59,4 @@ The sample simulations produced these animations: TODO
 
 ## Acknowledgements
 
-* This was a project conducted in an internship in the Research Software Engineering group at the University of Cambridge , under the supervision of Jeffrey Salmond (@js947)
+* This was a project conducted in an internship in the Research Software Engineering group at the University of Cambridge, under the supervision of Jeffrey Salmond (@js947)

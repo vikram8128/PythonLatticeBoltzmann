@@ -30,8 +30,6 @@ def genV() : # Generator for lattice directions
 
 v = array(genV())
 
-#TODO generalise weights
-
 t = array([1/36,1/9,1/36,1/9,4/9,1/9,1/36,1/9,1/36])
 
 col1 = array([0,1,2])
