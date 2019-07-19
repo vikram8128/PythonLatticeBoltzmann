@@ -14,7 +14,7 @@ sess = tf.compat.v1.InteractiveSession()
 
 timeSteps = 200
 stepsPerFrame = 100
-Re = 200.0 ### Reynolds number (adjust for viscosity)
+Re = 10.0 ### Reynolds number (adjust for viscosity)
 
 nx = 420 ### Lattice Dimensions
 ny = 180
@@ -37,6 +37,7 @@ relax = 1/(3*(uLB*tf.dtypes.cast(l,tf.dtypes.float32)/Re)+0.5)
 img_path = '../ObstacleProfiles/bend.png'
 img = cv2.imread(img_path, 0)
 ny,nx = img.shape
+print(ny,nx)
 
 def inObstacle(x,y) :
     return tf.dtypes.cast(img[[[int(a) for a in ly] for ly in y],[[int(b) for b in lx] for lx in x]] < 128, tf.dtypes.float32)
@@ -59,17 +60,17 @@ def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y),
 #     fin = tf.stack(finL,axis=0)
 #     return fin
 
-# def outflowFin(fin) : # Outflow function for right edge outflow
-#     finL = tf.unstack(fin,axis=0)
-#     finLb1 = tf.unstack(finL[-1],axis=1)
-#     finLb2 = tf.unstack(finL[-2],axis=1)
-#     finLb1[6] = finLb2[6]
-#     finLb1[7] = finLb2[7]
-#     finLb1[8] = finLb2[8]
-#     finL[-1] = tf.stack(finLb1,axis=1)
-#     finL[-2] = tf.stack(finLb2,axis=1)
-#     fin = tf.stack(finL,axis=0)
-#     return fin
+def outflowFin(fin) : # Outflow function for right edge outflow
+    finL = tf.unstack(fin,axis=0)
+    finLb1 = tf.unstack(finL[-1],axis=1)
+    finLb2 = tf.unstack(finL[-2],axis=1)
+    finLb1[6] = finLb2[6]
+    finLb1[7] = finLb2[7]
+    finLb1[8] = finLb2[8]
+    finL[-1] = tf.stack(finLb1,axis=1)
+    finL[-2] = tf.stack(finLb2,axis=1)
+    fin = tf.stack(finL,axis=0)
+    return fin
 
 # def outflowFin(fin) : # Outflow function for top edge outflow
 #     finL = tf.unstack(fin,axis=1)
@@ -83,17 +84,17 @@ def iniVel(x,y,d) : ### Function describing inflow velocities at position (x,y),
 #     fin = tf.stack(finL,axis=1)
 #     return fin
 
-def outflowFin(fin) : # Outflow function for bottom edge outflow
-    finL = tf.unstack(fin,axis=1)
-    finLb1 = tf.unstack(finL[-1],axis=1)
-    finLb2 = tf.unstack(finL[-2],axis=1)
-    finLb1[0] = finLb2[0]
-    finLb1[3] = finLb2[3]
-    finLb1[6] = finLb2[6]
-    finL[-1] = tf.stack(finLb1,axis=1)
-    finL[-2] = tf.stack(finLb2,axis=1)
-    fin = tf.stack(finL,axis=1)
-    return fin
+# def outflowFin(fin) : # Outflow function for bottom edge outflow
+#     finL = tf.unstack(fin,axis=1)
+#     finLb1 = tf.unstack(finL[-1],axis=1)
+#     finLb2 = tf.unstack(finL[-2],axis=1)
+#     finLb1[0] = finLb2[0]
+#     finLb1[3] = finLb2[3]
+#     finLb1[6] = finLb2[6]
+#     finL[-1] = tf.stack(finLb1,axis=1)
+#     finL[-2] = tf.stack(finLb2,axis=1)
+#     fin = tf.stack(finL,axis=1)
+#     return fin
 
 col0 = tf.convert_to_tensor([0,1,2])
 col1 = tf.convert_to_tensor([3,4,5])
@@ -205,7 +206,7 @@ def equilibrium(rho,u) : # Macroscopic equilibrium populations
 
 def getImage(u) : # Translation function from velocities to tensor for imaging
     usq =  u**2
-    return tf.transpose((2**3)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])),perm=[1,0,2])
+    return tf.transpose((2**1)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])),perm=[1,0,2])
 
 
 obstacle = np.fromfunction(inObstacle,(nx,ny)) #generator for obstacle tensor

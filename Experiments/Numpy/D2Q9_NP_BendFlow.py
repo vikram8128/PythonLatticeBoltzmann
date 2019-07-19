@@ -11,7 +11,7 @@ import cv2
 
 timeSteps = 200
 stepsPerFrame = 100
-Re = 200.0 ### Reynolds number (adjust for viscosity)
+Re = 10.0 ### Reynolds number (adjust for viscosity)
 
 nx = 420 ### Lattice Dimensions
 ny = 180
@@ -96,9 +96,9 @@ for time in range(timeSteps*stepsPerFrame) :
 
     ### Uncomment whichever outflow statement required
     # fin[col0,0,:] = fin[col0,1,:] # left edge outflow
-    # fin[col2,-1,:] = fin[col2,-2,:] # right edge outflow
+    fin[col2,-1,:] = fin[col2,-2,:] # right edge outflow
     # fin[row0,:,0] = fin[row0,:,1] # top edge outflow
-    fin[row2,:,-1] = fin[row2,:,-2] # bottom edge outflow
+    # fin[row2,:,-1] = fin[row2,:,-2] # bottom edge outflow
     
 
     rho,u = macroDense(fin)
