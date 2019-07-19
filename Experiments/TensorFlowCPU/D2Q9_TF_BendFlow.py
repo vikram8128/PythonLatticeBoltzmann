@@ -206,7 +206,7 @@ def equilibrium(rho,u) : # Macroscopic equilibrium populations
 
 def getImage(u) : # Translation function from velocities to tensor for imaging
     usq =  u**2
-    return tf.transpose((2**1)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])),perm=[1,0,2])
+    return tf.transpose((2**3)*tf.math.sqrt(simple_conv(usq,tf.expand_dims(tf.expand_dims(tf.convert_to_tensor([tf.dtypes.cast(1.0,tf.float32),tf.dtypes.cast(1.0,tf.float32)]),0),0),[1,1,1,2,1])),perm=[1,0,2])
 
 
 obstacle = np.fromfunction(inObstacle,(nx,ny)) #generator for obstacle tensor
