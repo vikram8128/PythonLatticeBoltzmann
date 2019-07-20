@@ -233,8 +233,7 @@ def streamRoller(fout) : # Streaming operator
         ret.append(tf.roll(tf.roll(fout[:,:,i], tf.dtypes.cast(v[i,0],tf.dtypes.int32), axis=0),tf.dtypes.cast(v[i,1],tf.dtypes.int32), axis=1))
     return tf.stack(ret,axis=2)
 
-
-with tf.device('/device:XLA_GPU:0'):
+with tf.device('/device:GPU:0'):
 
     vel = tf.cast(tf.convert_to_tensor(np.fromfunction(iniVel,(nx,ny,2))),tf.float32) # creates initial velocity conditions
 
@@ -311,11 +310,10 @@ with tf.device('/device:XLA_GPU:0'):
 
     stepGroup = tf.group(step13,)
 
-tf.compat.v1.global_variables_initializer().run()
+    tf.compat.v1.global_variables_initializer().run()
 
 for time in range(timeSteps*stepsPerFrame):
     sess.run(stepGroup)
-    print(time)
     if (time%stepsPerFrame == 0) :
         img = tf.image.encode_png(tf.image.convert_image_dtype(getImage(u),tf.dtypes.uint16))
         f = open("output/vel.{0:04d}.png".format(time//stepsPerFrame), "wb+")
