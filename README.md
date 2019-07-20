@@ -2,15 +2,15 @@
 
 This project includes 2D Lattice Boltzmann fluid solvers (https://en.wikipedia.org/wiki/Lattice_Boltzmann_methods) in both Tensorflow and only Numpy.
 
-I created these solvers in order to assess the potential improvements that Tensorflow can bring to a method like this. My analysis is available at TODO
+I created these solvers in order to assess the potential improvements that Tensorflow can bring to a method like this. A short report on this project is in [Analysis.pdf](Analysis/Analysis.pdf)
 
 ## How to Run
 
-The solvers can be run from a terminal.  Before running the solvers, create a directory called `output`.  The output will be a series of .png files in this folder.
+The solvers can be run from a command line. Before running the solvers, create a directory called `output`. The output will be a series of .png files in this folder.
 
 The solvers run by default run for 20000 timesteps, and create an image every 100 timesteps, but this can be changed in the constants section of each solver.
 
-To create your own solver, copy the file Experiments/Numpy/D2Q9_NP_Template.py or Experiments/TF/D2Q9_TF_Template.py. The solvers can be edited to have inflow and outflow from any face, and the structure of the map can be read in from a .png file. The lines that must be changed are indicated by a triple hash \#\#\#.
+To create your own solver, copy the file [D2Q9_NP_Template.py](Experiments/Numpy/D2Q9_NP_Template.py) or [D2Q9_TF_Template.py](Experiments/TF/D2Q9_TF_Template.py). The solvers can be edited to have inflow and outflow from any face, and the structure of the map can be read in from a .png file. The lines that must be changed are indicated by a triple hash `\#\#\#`.
 
 
 ### Prerequisites
