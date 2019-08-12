@@ -59,10 +59,10 @@ The sample simulations produced these animations:
 
 | Numpy | Tensorflow |
 | --- | --- |
-| ![](Videos/NP_AirfoilFlow.gif) | ![](Videos/TF_AirfoilFlow.gif) |
+| ![](Videos/NP_AirfoilFlow.gif) | ![](Videos/TF_Airfoilflow.gif) |
 | ![](Videos/NP_BendFlow.gif) | ![](Videos/TF_BendFlow.gif) |
-| ![](Videos/NP_CylinderFlow.gif) | ![](Videos/TF_CylinderFlow.gif) |
-| ![](Videos/NP_CylinderFlowHighViscosity.gif) | ![](Videos/TF_CylinderFlowHighViscosity.gif) |
+| ![](Videos/NP_CylinderFlow.gif) | ![](Videos/TF_CylinderLowViscosity.gif) |
+| ![](Videos/NP_CylinderFlowHighViscosity.gif) | ![](Videos/TF_CylinderHighViscosity.gif) |
 | ![](Videos/NP_PipeFlow.gif) | ![](Videos/TF_PipeFlow.gif) |
 
 
